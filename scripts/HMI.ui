@@ -120,6 +120,9 @@ color: rgb(255, 245, 0);</string>
                  </item>
                  <item>
                   <widget class="QLCDNumber" name="disp_tilt">
+                   <property name="styleSheet">
+                    <string notr="true">color: rgb(255, 255, 255);</string>
+                   </property>
                    <property name="digitCount">
                     <number>3</number>
                    </property>
@@ -154,6 +157,9 @@ color: rgb(255, 245, 0);</string>
                  </item>
                  <item>
                   <widget class="QLCDNumber" name="disp_pan">
+                   <property name="styleSheet">
+                    <string notr="true">color: rgb(255, 255, 255);</string>
+                   </property>
                    <property name="digitCount">
                     <number>3</number>
                    </property>
@@ -1087,7 +1093,7 @@ color: rgb(255, 245, 0);</string>
                         </layout>
                        </item>
                        <item>
-                        <widget class="QPushButton" name="pushButton">
+                        <widget class="QPushButton" name="bt_iniciar_rutina">
                          <property name="styleSheet">
                           <string notr="true">QPushButton{
 background-color: rgb(255, 245, 0);
