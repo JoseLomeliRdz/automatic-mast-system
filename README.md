@@ -5,8 +5,8 @@ This repository contains the scrips and virtual enviroment used in the developme
 Files:
 
 scripts:
-HMI.py - It's the script that runs the HMI for the system, "translate" the graphic signals to instructions that are sent thru the serial port to arduino in order to execute that action.
-HMI.ui - The .ui file it's the QtDesigner file that it's loaded in the HMI.py script in order to create the HMI
+HMI.py - It's the script that runs the HMI for the system, "translate" the graphic signals to instructions that are sent thru the serial port to arduino in order to execute that action. <br />
+HMI.ui - The .ui file it's the QtDesigner file that it's loaded in the HMI.py script in order to create the HMI.<br />
 mast_main.ino - It's the script that it's loaded to the Arduino Mega, we have the Mast Class that contains all the functions to control the movements and scanning of the mast system.
 
 venv:
