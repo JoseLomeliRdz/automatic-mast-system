@@ -1117,10 +1117,7 @@ QPushButton::hover{
                      <item>
                       <widget class="PlotWidget" name="range_plot">
                        <property name="styleSheet">
-                        <string notr="true">background-image: url(:/graphbackground/top4.png);
-background-repeat: repeat-n;
-background-position: bottom;
-background-color: rgba(255, 245, 0,100);</string>
+                        <string notr="true">background-color: rgba(255, 245, 0,100);</string>
                        </property>
                       </widget>
                      </item>
