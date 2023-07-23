@@ -30,7 +30,7 @@ class HMI(QMainWindow):
         # Connect the buttons from the Lidar Frame to their respective functions
         self.bt_iniciar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Iniciar Lidar", 'i')) # Connect the iniciar_lidar button to the iniciar_lidar function
         self.bt_pausar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Pausar Lidar", 'p')) # Connect the pausar_lidar button to the pausar_lidar function
-        self.bt_guardar_lidar.clicked.connect(self.guardar_lidar) # Connect the guardar_lidar button to the guardar_lidar function
+        self.bt_guardar_lidar.clicked.connect(self.leer_serial) # Connect the guardar_lidar button to the guardar_lidar function
 
         # Connect the Mode Selection buttons to their respective functions
         self.modo_manual.clicked.connect(lambda: self.seleccionar_modo('manual')) # Connect the modo_manual button to the modo_manual_func function
@@ -56,7 +56,7 @@ class HMI(QMainWindow):
         self.seleccionar_modo('manual') # Call the seleccionar_modo function to initialize the mode to manual
 
     def leer_puertos(self):
-        self.baudrates = ['4800','9600', '19200', '38400', '57600', '115200','256000'] # List of baudrates
+        self.baudrates = ['4800','9600', '19200', '38400', '57600', '115200','230400','460800'] # List of baudrates
         puertos_disponibles = []
         puertos = QSerialPortInfo.availablePorts() # Get the available ports
         for puerto in puertos:
@@ -66,18 +66,22 @@ class HMI(QMainWindow):
         self.lista_baud.clear() # Clear the list of baudrates
         self.lista_puertos.addItems(puertos_disponibles) # Add the available ports to the list
         self.lista_baud.addItems(self.baudrates) # Add the baudrates to the list
-        self.lista_baud.setCurrentIndex(6) # Set the default baudrate to 256000
+        self.lista_baud.setCurrentIndex(7) # Set the default baudrate to 460800
         
     def conectar_puerto(self): # Function to connect to the serial port
-        self.serial.waitForReadyRead(100) # Wait for 100 ms
-        self.port = self.lista_puertos.currentText() # Get the selected port
-        self.baud = self.lista_baud.currentText() # Get the selected baudrate
-        self.serial.setPortName(self.port) # Set the port name
-        self.serial.setBaudRate(int(self.baud)) # Set the baudrate
-        self.serial.open(QIODevice.ReadWrite) # Open the port
+        try:
+            self.serial.waitForReadyRead(100) # Wait for 100 ms
+            self.port = self.lista_puertos.currentText() # Get the selected port
+            self.baud = self.lista_baud.currentText() # Get the selected baudrate
+            self.serial.setPortName(self.port) # Set the port name
+            self.serial.setBaudRate(int(self.baud)) # Set the baudrate
+            self.serial.open(QIODevice.ReadWrite) # Open the port
+            print('Conectado al puerto: ', self.port)
+        except:
+            print('Error al abrir el puerto serial')
+        
 
     def leer_serial(self): # Function to read the serial port
-        if not self.serial.canReadLine(): return
         try:
             linea = self.serial.readLine()
             linea_decoded = str(linea, 'utf-8').strip()
@@ -148,7 +152,13 @@ class HMI(QMainWindow):
         # Transform to cartesian and plot the labels
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        self.range_plot.plot(x, y, pen=None, symbol='o', symbolSize=7)
+
+        grid_labels = ['90°','75°','60°','45°','30°','15°','0°','-15°','-30°','-45°','-60°','-75','-90']
+        for i in range(len(grid_labels)):
+            label = pg.TextItem(grid_labels[i], anchor=(0.5,0.5))
+            label.setPos(x[i],y[i])
+            self.range_plot.addItem(label)
+
         mast_point = (0,0)
         self.range_plot.plot(mast_point,mast_point, pen=None, symbol='o', symbolSize=25, symbolBrush='y') # Add the mast point
         
