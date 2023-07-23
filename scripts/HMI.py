@@ -3,6 +3,7 @@ from PyQt5.uic import loadUi
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5.QtCore import QIODevice, QPoint
 from PyQt5 import QtCore, QtWidgets
+import pyqtgraph as pg
 from pyqtgraph import PlotWidget
 import numpy as np
 import sys
@@ -51,6 +52,8 @@ class HMI(QMainWindow):
         self.entry_sup_pan.valueChanged.connect(self.update_plot) # Connect the entry_sup_pan signal to the update_plot function
 
         self.leer_puertos() # Call the leer_puertos function to obtain the available ports
+        self.initialize_plot() # Call the update_plot function to initialize the plot
+        self.seleccionar_modo('manual') # Call the seleccionar_modo function to initialize the mode to manual
 
     def leer_puertos(self):
         self.baudrates = ['4800','9600', '19200', '38400', '57600', '115200','256000'] # List of baudrates
@@ -121,14 +124,62 @@ class HMI(QMainWindow):
         else:
             print('Te encuentras en modo manual, cambia a modo automatico para iniciar la rutina')
 
+    def initialize_plot(self):
+        self.range_plot.setAspectLocked() # Lock the aspect ratio of the plot
+        self.range_plot.hideAxis('bottom') # Hide the bottom axis
+        self.range_plot.hideAxis('left') # Hide the left axis
+        self.range_plot.setRange(xRange=[-150,150],yRange=[10,250]) # Set the range of the plot
+        self.range_plot.addLine(x=0, pen=0.2) # Add the x axis
+        self.range_plot.addLine(y=0, pen=0.2) # Add the y axis
+        
+        for p in range(15,175,15): # Add the polar axis
+            polar_axis = pg.InfiniteLine((0,0),angle=p,pen=0.2)
+            self.range_plot.addItem(polar_axis)
+
+        for r in range(1,600,100): # Create the polar grid
+            circle = pg.CircleROI((-r/2,-r/2),r, pen = pg.mkPen(0.2))
+            self.range_plot.addItem(circle)
+            circle.removeHandle(0)
+
+        # Create the polar label points every 15 degrees or pi/12 radians
+        theta = np.linspace(0, np.pi, 13)
+        radius = 250
+
+        # Transform to cartesian and plot the labels
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
+        self.range_plot.plot(x, y, pen=None, symbol='o', symbolSize=7)
+        mast_point = (0,0)
+        self.range_plot.plot(mast_point,mast_point, pen=None, symbol='o', symbolSize=25, symbolBrush='y') # Add the mast point
+        
     def update_plot(self):
-        inf_tilt = self.entry_inf_tilt.value()
-        sup_tilt = self.entry_sup_tilt.value()
+        self.range_plot.clear() # Clear the plot
+        self.initialize_plot() # Initialize the plot
+        radius = 250 # Set the radius of the plot
+        
+        # Create the pan cartesian coordinates
         inf_pan = self.entry_inf_pan.value()
         sup_pan = self.entry_sup_pan.value()
+
+        # Modify the pan angles to consider 90 degrees as the 0 degrees, so negative angles will be located in the 2nd quadrant and positive angles in the 1th quadrant
+        inf_pan = 90 + abs(inf_pan)
+        sup_pan = 90 - sup_pan
+
+        cartesian_inf_pan_x = radius * np.cos((2*np.pi*inf_pan)/360) # Transform the pan angles to cartesian coordinates, the angles are in degrees so we need to convert them to radians
+        cartesian_inf_pan_y = radius * np.sin((2*np.pi*inf_pan)/360)
+        cartesian_sup_pan_x = radius * np.cos((2*np.pi*sup_pan)/360)
+        cartesian_sup_pan_y = radius * np.sin((2*np.pi*sup_pan)/360)
+
+        self.range_plot.plot((cartesian_inf_pan_x,cartesian_sup_pan_x),(cartesian_inf_pan_y,cartesian_sup_pan_y), pen=None, symbol='o', symbolSize=7, symbolBrush='r')
+
+        # Create the field of view of the pan range
+        pov_inf = pg.InfiniteLine((0,0),angle=inf_pan,pen=1)
+        self.range_plot.addItem(pov_inf)
+        pov_sup = pg.InfiniteLine((0,0),angle=sup_pan,pen=1)
+        self.range_plot.addItem(pov_sup)
+
+        
     
-
-
 
 if __name__ == '__main__': # If we're running file directly and not importing it
     app = QApplication(sys.argv) # Create an instance of QApplication

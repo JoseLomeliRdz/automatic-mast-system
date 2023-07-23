@@ -866,7 +866,7 @@ color: rgb(255, 245, 0);</string>
                               <number>-40</number>
                              </property>
                              <property name="maximum">
-                              <number>80</number>
+                              <number>0</number>
                              </property>
                             </widget>
                            </item>
@@ -932,10 +932,10 @@ color: rgb(255, 245, 0);</string>
                               <bool>false</bool>
                              </property>
                              <property name="minimum">
-                              <number>-40</number>
+                              <number>0</number>
                              </property>
                              <property name="maximum">
-                              <number>80</number>
+                              <number>40</number>
                              </property>
                             </widget>
                            </item>
@@ -1012,10 +1012,10 @@ color: rgb(255, 245, 0);</string>
                               <bool>false</bool>
                              </property>
                              <property name="minimum">
-                              <number>-40</number>
+                              <number>-30</number>
                              </property>
                              <property name="maximum">
-                              <number>80</number>
+                              <number>0</number>
                              </property>
                             </widget>
                            </item>
@@ -1081,10 +1081,10 @@ color: rgb(255, 245, 0);</string>
                               <bool>false</bool>
                              </property>
                              <property name="minimum">
-                              <number>-40</number>
+                              <number>0</number>
                              </property>
                              <property name="maximum">
-                              <number>80</number>
+                              <number>30</number>
                              </property>
                             </widget>
                            </item>
@@ -1118,6 +1118,12 @@ QPushButton::hover{
                       <widget class="PlotWidget" name="range_plot">
                        <property name="styleSheet">
                         <string notr="true">background-color: rgba(255, 245, 0,100);</string>
+                       </property>
+                       <property name="interactive">
+                        <bool>false</bool>
+                       </property>
+                       <property name="rubberBandSelectionMode">
+                        <enum>Qt::ContainsItemShape</enum>
                        </property>
                       </widget>
                      </item>
