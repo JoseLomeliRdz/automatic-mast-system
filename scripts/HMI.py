@@ -27,7 +27,7 @@ class HMI(QMainWindow):
         self.serial.readyRead.connect(self.leer_serial) # Connect the serial.readyRead signal to the leer_serial function
 
         # Connect the buttons from the Lidar Frame to their respective functions
-        self.bt_iniciar_lidar.clicked.connect(self.enviar_serial("Enviando instrucción: Iniciar Lidar",'l')) # Connect the iniciar_lidar button to the iniciar_lidar function
+        self.bt_iniciar_lidar.clicked.connect(self.enviar_serial("hola:",'i')) # Connect the iniciar_lidar button to the iniciar_lidar function
         self.bt_pausar_lidar.clicked.connect(self.enviar_serial("Enviando instrucción: Pausar Lidar",'p')) # Connect the pausar_lidar button to the pausar_lidar function
         self.bt_guardar_lidar.clicked.connect(self.guardar_lidar) # Connect the guardar_lidar button to the guardar_lidar function
 
