@@ -13,13 +13,12 @@ uint8_t servo_pan = 0; // Definimos el servo pan
 uint8_t servo_tilt = 1; // Definimos el servo tilt
 
 RPLidar lidar;
-#define RPLIDAR_MOTOR 2 // Definimos el pin del motor del sensor Lidar
-bool lidar_ready = false; // Variable para saber si el sensor Lidar esta listo
-
-int time = 0; // Variable para medir el tiempo
+#define RPLIDAR_MOTOR 3 // Definimos el pin del motor del sensor Lidar
+float minDistance = 100000;
+float angleAtMinDist = 0;
 
 /*Funcion MoverServo que mueve un especificado servo a un angulo especifico*/
-void MoverServo(uint8_t servo, uint8_t angulo) {
+void moverServo(uint8_t servo, uint8_t angulo) {
 
   int ancho_pulso_crudo, ancho_pulso_convertido;
   
@@ -31,63 +30,87 @@ void MoverServo(uint8_t servo, uint8_t angulo) {
   pwmServos.setPWM(servo, 0, ancho_pulso_convertido);
 }
 
-void LidarInitialize(){
-  rplidar_response_device_info_t info;
-  if (IS_OK(lidar.getDeviceInfo(info, 200))) {
-    lidar.startScan();
-    pwmLidar.setPWM(RPLIDAR_MOTOR, 0, 4096);
-    lidar_ready = true;
-  }
-  else{
-    Serial.println("Lidar not detected");
-    lidar_ready = false;
-  }
+void modoManual(uint8_t angulo_pan, uint8_t angulo_tilt){
+  moverServo(servo_pan,angulo_pan);
+  moverServo(servo_tilt,angulo_tilt);
 }
 
-void LidarScan(uint8_t task){
-  if (task == 1){
+void home(){
+  moverServo(servo_pan,0);
+  moverServo(servo_tilt,0);
+}
+
+void ascenso(){
+ // Aqui debe ir el codigo para el ascenso del mastil
+}
+
+void descenso(){
+  // Aqui debe ir el codigo para el descenso del mastil
+}
+
+void modoAuto(uint8_t tilt_inf, uint8_t tilt_sup, uint8_t pan_inf, uint8_t pan_sup){
+
+}
+
+void saveData(float angle, float distance){
+  Serial.print("dist: ");
+  Serial.print(distance);
+  Serial.print("   angle: ");
+  Serial.println(angle);
+}
+
+void LidarScan(){
     if (IS_OK(lidar.waitPoint())) {
-      float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
-      float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
-      bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
-      byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
-      Serial.write(' ');
-      Serial.print(distance);
-      Serial.write(' ');
-      Serial.print(angle);
-      Serial.write(' ');
-      Serial.print(startBit);
-      Serial.write(' ');
-      Serial.println(quality);
+      //perform data processing here... 
+      float distance = lidar.getCurrentPoint().distance;
+      float angle = lidar.getCurrentPoint().angle;  // 0-360 deg
+    
+      if (lidar.getCurrentPoint().startBit) {
+        // a new scan, display the previous data...
+        saveData(angleAtMinDist, minDistance);
+        minDistance = 100000;
+        angleAtMinDist = 0;
+      } 
+      else {
+        if ( distance > 0 &&  distance < minDistance) {
+          minDistance = distance;
+          angleAtMinDist = angle;
+        }
+      }
     }
-  } 
-  else if (task == 0){
-    pwmLidar.setPWM(RPLIDAR_MOTOR, 0, 0);
-    lidar.stop();
-  }
-  
+    else {
+      Serial.println("No detecta");
+      pwmLidar.setPWM(RPLIDAR_MOTOR,0,4096);
+      // Try to detect RPLIDAR
+      rplidar_response_device_info_t info;
+      if (IS_OK(lidar.getDeviceInfo(info, 500))) {
+        // Detected
+        lidar.startScan();
+        pwmLidar.setPWM(RPLIDAR_MOTOR,2048,0);
+        delay(500);
+      }
+    }
 }
 
+
+void interpretador(byte comando){
+
+}
 
 void setup(){
-   pwmServos.setPWMFreq(FREQUENCY); // Establecer la frecuencia del servo
-   pwmServos.setOscillatorFrequency(27000000); // Establecer la frecuencia del oscilador del driver PCA9685
-   pwmServos.begin(); // Iniciar el driver PCA9685
-
-   pwmLidar.setPWMFreq(1600); // Establecer la frecuencia del servo
-   pwmLidar.setOscillatorFrequency(27000000); // Establecer la frecuencia del oscilador del driver PCA9685
-   pwmLidar.begin(); // Iniciar el driver PCA9685
-   delay(1000);
-   
-   lidar.begin(Serial2);
-
-  Serial.begin(460800);
+  pwmServos.begin(); // Iniciar el driver PCA9685
+  pwmServos.setPWMFreq(FREQUENCY); // Establecer la frecuencia del servo
+  pwmServos.setOscillatorFrequency(27000000); // Establecer la frecuencia del oscilador del driver PCA9685
   
-  while(lidar_ready == false){
-    LidarInitialize();
-  }
+  pwmLidar.begin(); // Iniciar el driver PCA9685
+  pwmLidar.setPWMFreq(1600); // Establecer la frecuencia del servo
+  pwmLidar.setOscillatorFrequency(27000000); // Establecer la frecuencia del oscilador del driver PCA9685
+  
+  Serial.begin(460800);
+  Serial2.begin(115200);
+  lidar.begin(Serial2);
 }
 
 void loop(){
-  LidarScan(1);
+  LidarScan();
 }
