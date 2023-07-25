@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>826</width>
-    <height>620</height>
+    <height>621</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -684,7 +684,7 @@ color: rgb(0, 0, 0);</string>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="bt_pausar_lidar">
+                    <widget class="QPushButton" name="bt_detener_lidar">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -704,7 +704,7 @@ color: rgb(0, 0, 0);</string>
                       </size>
                      </property>
                      <property name="text">
-                      <string>Pausar Escaneo</string>
+                      <string>Detener Escaneo</string>
                      </property>
                     </widget>
                    </item>

@@ -7,6 +7,7 @@ import pyqtgraph as pg
 from pyqtgraph import PlotWidget
 import numpy as np
 import sys
+import gc
 import time
 import threading
 
@@ -24,13 +25,13 @@ class HMI(QMainWindow):
         self.serial = QSerialPort() # Create a QSerialPort object
         self.bt_conectar_serial.clicked.connect(self.conectar_puerto) # Connect the conectar_serial button to the conectar_puerto function
         self.bt_actualizar_serial.clicked.connect(self.leer_puertos) # Connect the actualizar_serial button to the actualizar_puertos function
-        self.bt_desconectar_serial.clicked.connect(lambda: self.serial.close()) # Connect the desconectar_serial button to the desconectar_puerto function
+        self.bt_desconectar_serial.clicked.connect(self.desconectar_puerto) # Connect the desconectar_serial button to the desconectar_puerto function
         self.serial.readyRead.connect(self.leer_serial) # Connect the serial.readyRead signal to the leer_serial function
 
         # Connect the buttons from the Lidar Frame to their respective functions
-        self.bt_iniciar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Iniciar Lidar", 'i')) # Connect the iniciar_lidar button to the iniciar_lidar function
-        self.bt_pausar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Pausar Lidar", 'p')) # Connect the pausar_lidar button to the pausar_lidar function
-        self.bt_guardar_lidar.clicked.connect(self.leer_serial) # Connect the guardar_lidar button to the guardar_lidar function
+        self.bt_iniciar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Iniciar Lidar", 0x01)) # Connect the iniciar_lidar button to the iniciar_lidar function
+        self.bt_detener_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Detener Lidar", 0x02)) # Connect the pausar_lidar button to the pausar_lidar function
+        self.bt_guardar_lidar.clicked.connect(self.guardar_lidar) # Connect the guardar_lidar button to the guardar_lidar function
 
         # Connect the Mode Selection buttons to their respective functions
         self.modo_manual.clicked.connect(lambda: self.seleccionar_modo('manual')) # Connect the modo_manual button to the modo_manual_func function
@@ -38,9 +39,9 @@ class HMI(QMainWindow):
         
         # Connect the buttons from the Modo Manual Frame to their respective functions
         self.bt_enviar_manual.clicked.connect(self.enviar_manual_data) # Connect the enviar_manual button to the enviar_manual_func function
-        self.bt_home_tilt.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Posición Home Cabezal",'h')) # Connect the home_tilt button to the home_tilt function
-        self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",'a')) # Connect the ascenso button to the ascenso function
-        self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",'d')) # Connect the descenso button to the descenso function
+        self.bt_home_tilt.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Posición Home Cabezal",0x06)) # Connect the home_tilt button to the home_tilt function
+        self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",0x07)) # Connect the ascenso button to the ascenso function
+        self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",0x08)) # Connect the descenso button to the descenso function
 
         # Connect the buttons from the Modo Automatico Frame to their respective functions
         self.bt_iniciar_rutina.clicked.connect(self.iniciar_rutina) # Connect the iniciar_rutina button to the iniciar_rutina function
@@ -79,7 +80,13 @@ class HMI(QMainWindow):
             print('Conectado al puerto: ', self.port)
         except:
             print('Error al abrir el puerto serial')
-        
+    
+    def desconectar_puerto(self): # Function to disconnect from the serial port
+        try:
+            self.serial.close() # Close the port
+            print('Desconectado del puerto: ', self.port)
+        except:
+            print('Error al cerrar el puerto serial')
 
     def leer_serial(self): # Function to read the serial port
         try:
@@ -91,16 +98,16 @@ class HMI(QMainWindow):
 
     def enviar_serial(self, mensaje, data): # Function to send data to the serial port
         try:
-            data = data + '\n'
+            data = bytes([data])
             print(mensaje,data)
             if self.serial.isOpen():
-                self.serial.write(data.encode())
+                self.serial.write(data)
         except:
             print('Error al enviar datos por el puerto serial')
 
     def guardar_lidar(self): # Function to save the Lidar data
-        print('Guardando Lidar')
-        self.enviar_serial()
+        self.enviar_serial("Enviando instrucción: Guardar Lidar", 0x03)
+        #Codigo
     
     def seleccionar_modo(self, seleccion): # Function to select the mode of the system, it will habilitate or disable the respective frames buttons
         if(seleccion == 'manual'):
@@ -110,21 +117,23 @@ class HMI(QMainWindow):
     
     def enviar_manual_data(self): # Function to send the manual data to the serial port
         if(self.modo == 'M'):
+            self.enviar_serial("Enviando instrucción: Enviar Pos. Manual", 0x05)
             tilt = self.entry_tilt_manual.text()
             pan = self.entry_pan_manual.text()
             self.disp_tilt.display(int(tilt))
             self.disp_pan.display(int(pan))
-            self.enviar_serial("Enviando posición manual:",str(tilt)+','+str(pan))
+            self.enviar_serial("Enviando posición manual:",bytes(str(tilt)+','+str(pan),'utf-8'))
         else:
             print('Te encuentras en modo automatico, cambia a modo manual para enviar datos')
 
     def iniciar_rutina(self): # Function to send the initiate signal for the scanning routine to the serial port
         if(self.modo == 'A'):
+            self.enviar_serial("Enviando instrucción: Iniciar Rutina", 0x04)
             inf_tilt = self.entry_inf_tilt.value()
             sup_tilt = self.entry_sup_tilt.value()
             inf_pan = self.entry_inf_pan.value()
             sup_pan = self.entry_sup_pan.value()
-            self.enviar_serial("Enviando datos de la rutina:",str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan))
+            self.enviar_serial("Enviando datos de la rutina:",bytes(str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan)))
         else:
             print('Te encuentras en modo manual, cambia a modo automatico para iniciar la rutina')
 
@@ -195,4 +204,5 @@ if __name__ == '__main__': # If we're running file directly and not importing it
     app = QApplication(sys.argv) # Create an instance of QApplication
     window = HMI() # Create an instance of the HMI class
     window.show() # Show the window
+    gc.collect() # Collect the garbage
     sys.exit(app.exec_()) # Start the event loop

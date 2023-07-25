@@ -16,7 +16,8 @@ RPLidar lidar;
 #define RPLIDAR_MOTOR 3 // Definimos el pin del motor del sensor Lidar
 float minDistance = 100000;
 float angleAtMinDist = 0;
-
+uint8_t time = 0;
+byte comando = 0x00;
 /*Funcion MoverServo que mueve un especificado servo a un angulo especifico*/
 void moverServo(uint8_t servo, uint8_t angulo) {
 
@@ -30,25 +31,25 @@ void moverServo(uint8_t servo, uint8_t angulo) {
   pwmServos.setPWM(servo, 0, ancho_pulso_convertido);
 }
 
-void modoManual(uint8_t angulo_pan, uint8_t angulo_tilt){
+void posicionManual(uint8_t angulo_pan, uint8_t angulo_tilt){
   moverServo(servo_pan,angulo_pan);
   moverServo(servo_tilt,angulo_tilt);
 }
 
-void home(){
+void homeTilt(){
   moverServo(servo_pan,0);
   moverServo(servo_tilt,0);
 }
 
-void ascenso(){
+void ascensoMastil(){
  // Aqui debe ir el codigo para el ascenso del mastil
 }
 
-void descenso(){
+void descensoMastil(){
   // Aqui debe ir el codigo para el descenso del mastil
 }
 
-void modoAuto(uint8_t tilt_inf, uint8_t tilt_sup, uint8_t pan_inf, uint8_t pan_sup){
+void iniciarRutina(){
 
 }
 
@@ -59,12 +60,10 @@ void saveData(float angle, float distance){
   Serial.println(angle);
 }
 
-void LidarScan(){
+void lidarScan(){
     if (IS_OK(lidar.waitPoint())) {
-      //perform data processing here... 
       float distance = lidar.getCurrentPoint().distance;
       float angle = lidar.getCurrentPoint().angle;  // 0-360 deg
-    
       if (lidar.getCurrentPoint().startBit) {
         // a new scan, display the previous data...
         saveData(angleAtMinDist, minDistance);
@@ -79,8 +78,6 @@ void LidarScan(){
       }
     }
     else {
-      Serial.println("No detecta");
-      pwmLidar.setPWM(RPLIDAR_MOTOR,0,4096);
       // Try to detect RPLIDAR
       rplidar_response_device_info_t info;
       if (IS_OK(lidar.getDeviceInfo(info, 500))) {
@@ -88,13 +85,57 @@ void LidarScan(){
         lidar.startScan();
         pwmLidar.setPWM(RPLIDAR_MOTOR,2048,0);
         delay(500);
+        Serial.print("READY");
       }
     }
 }
 
+void lidarStop(){
+  pwmLidar.setPWM(RPLIDAR_MOTOR,0,4096);
+  lidar.stop();
+  Serial.print("STOPPED");
+}
+
+void lidarSave(){
+  // Codigo para enviar los datos del lidar
+}
 
 void interpretador(byte comando){
-
+  switch(comando){
+    case 0x01:
+      lidarScan();
+      break;
+    case 0x02:
+      lidarStop();
+      break;
+    case 0x03:
+      Serial.print(0x03);
+      //lidarSave();
+      break;
+    case 0x04:
+      Serial.print(0x04);
+      //iniciarRutina();
+      break;
+    case 0x05:
+      Serial.print(0x05);
+      //posicionManual();
+      break;
+    case 0x06:
+      Serial.print(0x06);
+      //homeTilt();
+      break;
+    case 0x07:
+      Serial.print(0x07);
+      //ascensoMastil();
+      break;
+    case 0x08:
+      Serial.print(0x08);
+      //descensoMastil();
+      break;
+    default:
+      Serial.println("0x00");
+      break;
+  }
 }
 
 void setup(){
@@ -109,8 +150,10 @@ void setup(){
   Serial.begin(460800);
   Serial2.begin(115200);
   lidar.begin(Serial2);
+  
 }
 
 void loop(){
-  LidarScan();
+  Serial.readBytes(&comando,1);
+  interpretador(comando);
 }
