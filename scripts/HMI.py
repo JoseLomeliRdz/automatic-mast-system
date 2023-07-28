@@ -29,8 +29,8 @@ class HMI(QMainWindow):
         self.serial.readyRead.connect(self.leer_serial) # Connect the serial.readyRead signal to the leer_serial function
 
         # Connect the buttons from the Lidar Frame to their respective functions
-        self.bt_iniciar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Iniciar Lidar", 0x01)) # Connect the iniciar_lidar button to the iniciar_lidar function
-        self.bt_detener_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Detener Lidar", 0x02)) # Connect the pausar_lidar button to the pausar_lidar function
+        self.bt_iniciar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Iniciar Lidar", 1)) # Connect the iniciar_lidar button to the iniciar_lidar function
+        self.bt_detener_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Detener Lidar", 2)) # Connect the pausar_lidar button to the pausar_lidar function
         self.bt_guardar_lidar.clicked.connect(self.guardar_lidar) # Connect the guardar_lidar button to the guardar_lidar function
 
         # Connect the Mode Selection buttons to their respective functions
@@ -39,21 +39,21 @@ class HMI(QMainWindow):
         
         # Connect the buttons from the Modo Manual Frame to their respective functions
         self.bt_enviar_manual.clicked.connect(self.enviar_manual_data) # Connect the enviar_manual button to the enviar_manual_func function
-        self.bt_home_tilt.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Posición Home Cabezal",0x06)) # Connect the home_tilt button to the home_tilt function
-        self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",0x07)) # Connect the ascenso button to the ascenso function
-        self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",0x08)) # Connect the descenso button to the descenso function
+        self.bt_home_tilt.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Posición Home Cabezal",6)) # Connect the home_tilt button to the home_tilt function
+        self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",7)) # Connect the ascenso button to the ascenso function
+        self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",8)) # Connect the descenso button to the descenso function
 
         # Connect the buttons from the Modo Automatico Frame to their respective functions
         self.bt_iniciar_rutina.clicked.connect(self.iniciar_rutina) # Connect the iniciar_rutina button to the iniciar_rutina function
 
         # Connect the signals from the Modo Automatico Range Selection to the PlotWidget
-        self.entry_inf_tilt.valueChanged.connect(self.update_plot) # Connect the entry_inf_tilt signal to the update_plot function
-        self.entry_sup_tilt.valueChanged.connect(self.update_plot) # Connect the entry_sup_tilt signal to the update_plot function
-        self.entry_inf_pan.valueChanged.connect(self.update_plot) # Connect the entry_inf_pan signal to the update_plot function
-        self.entry_sup_pan.valueChanged.connect(self.update_plot) # Connect the entry_sup_pan signal to the update_plot function
+        self.entry_inf_tilt.valueChanged.connect(self.actualizar_grafica) # Connect the entry_inf_tilt signal to the update_plot function
+        self.entry_sup_tilt.valueChanged.connect(self.actualizar_grafica) # Connect the entry_sup_tilt signal to the update_plot function
+        self.entry_inf_pan.valueChanged.connect(self.actualizar_grafica) # Connect the entry_inf_pan signal to the update_plot function
+        self.entry_sup_pan.valueChanged.connect(self.actualizar_grafica) # Connect the entry_sup_pan signal to the update_plot function
 
         self.leer_puertos() # Call the leer_puertos function to obtain the available ports
-        self.initialize_plot() # Call the update_plot function to initialize the plot
+        self.inicializar_grafica() # Call the update_plot function to initialize the plot
         self.seleccionar_modo('manual') # Call the seleccionar_modo function to initialize the mode to manual
 
     def leer_puertos(self):
@@ -106,7 +106,7 @@ class HMI(QMainWindow):
             print('Error al enviar datos por el puerto serial')
 
     def guardar_lidar(self): # Function to save the Lidar data
-        self.enviar_serial("Enviando instrucción: Guardar Lidar", 0x03)
+        self.enviar_serial("Enviando instrucción: Guardar Lidar", 3)
         #Codigo
     
     def seleccionar_modo(self, seleccion): # Function to select the mode of the system, it will habilitate or disable the respective frames buttons
@@ -115,29 +115,36 @@ class HMI(QMainWindow):
         elif(seleccion == 'auto'):
             self.modo = 'A'
     
+    def actualizar_display(self):
+        self.disp_tilt.display(self.tilt)
+        self.disp_pan.display(self.pan)
+
     def enviar_manual_data(self): # Function to send the manual data to the serial port
         if(self.modo == 'M'):
-            self.enviar_serial("Enviando instrucción: Enviar Pos. Manual", 0x05)
-            tilt = self.entry_tilt_manual.text()
-            pan = self.entry_pan_manual.text()
-            self.disp_tilt.display(int(tilt))
-            self.disp_pan.display(int(pan))
-            self.enviar_serial("Enviando posición manual:",bytes(str(tilt)+','+str(pan),'utf-8'))
+            self.enviar_serial("Enviando instrucción: Enviar Pos. Manual", 5)
+            self.tilt = self.entry_tilt_manual.value()
+            self.pan = self.entry_pan_manual.value()
+            self.actualizar_display()
+            data = str(self.tilt)+','+ str(self.pan)
+            data = data.encode('utf-8')
+            print("data:",data)
+            if self.serial.isOpen():
+                self.serial.write(data)
         else:
             print('Te encuentras en modo automatico, cambia a modo manual para enviar datos')
 
     def iniciar_rutina(self): # Function to send the initiate signal for the scanning routine to the serial port
         if(self.modo == 'A'):
-            self.enviar_serial("Enviando instrucción: Iniciar Rutina", 0x04)
+            self.enviar_serial("Enviando instrucción: Iniciar Rutina", 4)
             inf_tilt = self.entry_inf_tilt.value()
             sup_tilt = self.entry_sup_tilt.value()
             inf_pan = self.entry_inf_pan.value()
             sup_pan = self.entry_sup_pan.value()
-            self.enviar_serial("Enviando datos de la rutina:",bytes(str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan)))
+            self.enviar_serial("Enviando datos de la rutina:",str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan))
         else:
             print('Te encuentras en modo manual, cambia a modo automatico para iniciar la rutina')
 
-    def initialize_plot(self):
+    def inicializar_grafica(self):
         self.range_plot.setAspectLocked() # Lock the aspect ratio of the plot
         self.range_plot.hideAxis('bottom') # Hide the bottom axis
         self.range_plot.hideAxis('left') # Hide the left axis
@@ -171,9 +178,9 @@ class HMI(QMainWindow):
         mast_point = (0,0)
         self.range_plot.plot(mast_point,mast_point, pen=None, symbol='o', symbolSize=25, symbolBrush='y') # Add the mast point
         
-    def update_plot(self):
+    def actualizar_grafica(self):
         self.range_plot.clear() # Clear the plot
-        self.initialize_plot() # Initialize the plot
+        self.inicializar_grafica() # Initialize the plot
         radius = 250 # Set the radius of the plot
         
         # Create the pan cartesian coordinates
@@ -196,6 +203,9 @@ class HMI(QMainWindow):
         self.range_plot.addItem(pov_inf)
         pov_sup = pg.InfiniteLine((0,0),angle=sup_pan,pen=1)
         self.range_plot.addItem(pov_sup)
+    
+    
+    
 
         
     

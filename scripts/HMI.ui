@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>826</width>
+    <width>801</width>
     <height>621</height>
    </rect>
   </property>
@@ -1012,7 +1012,7 @@ color: rgb(255, 245, 0);</string>
                               <bool>false</bool>
                              </property>
                              <property name="minimum">
-                              <number>-30</number>
+                              <number>-20</number>
                              </property>
                              <property name="maximum">
                               <number>0</number>
@@ -1084,7 +1084,7 @@ color: rgb(255, 245, 0);</string>
                               <number>0</number>
                              </property>
                              <property name="maximum">
-                              <number>30</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -1219,7 +1219,7 @@ color: rgb(255, 245, 0);</string>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLineEdit" name="entry_tilt_manual">
+                          <widget class="QSpinBox" name="entry_tilt_manual">
                            <property name="minimumSize">
                             <size>
                              <width>0</width>
@@ -1228,12 +1228,24 @@ color: rgb(255, 245, 0);</string>
                            </property>
                            <property name="maximumSize">
                             <size>
-                             <width>200</width>
-                             <height>16777215</height>
+                             <width>140</width>
+                             <height>30</height>
                             </size>
                            </property>
                            <property name="styleSheet">
                             <string notr="true">background-color: rgb(255, 255, 255);</string>
+                           </property>
+                           <property name="frame">
+                            <bool>false</bool>
+                           </property>
+                           <property name="buttonSymbols">
+                            <enum>QAbstractSpinBox::PlusMinus</enum>
+                           </property>
+                           <property name="minimum">
+                            <number>-20</number>
+                           </property>
+                           <property name="maximum">
+                            <number>20</number>
                            </property>
                           </widget>
                          </item>
@@ -1268,7 +1280,7 @@ color: rgb(255, 245, 0);</string>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLineEdit" name="entry_pan_manual">
+                          <widget class="QSpinBox" name="entry_pan_manual">
                            <property name="minimumSize">
                             <size>
                              <width>0</width>
@@ -1277,12 +1289,24 @@ color: rgb(255, 245, 0);</string>
                            </property>
                            <property name="maximumSize">
                             <size>
-                             <width>200</width>
-                             <height>16777215</height>
+                             <width>140</width>
+                             <height>30</height>
                             </size>
                            </property>
                            <property name="styleSheet">
                             <string notr="true">background-color: rgb(255, 255, 255);</string>
+                           </property>
+                           <property name="frame">
+                            <bool>false</bool>
+                           </property>
+                           <property name="buttonSymbols">
+                            <enum>QAbstractSpinBox::PlusMinus</enum>
+                           </property>
+                           <property name="minimum">
+                            <number>-40</number>
+                           </property>
+                           <property name="maximum">
+                            <number>40</number>
                            </property>
                           </widget>
                          </item>
