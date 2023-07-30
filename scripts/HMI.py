@@ -127,7 +127,7 @@ class HMI(QMainWindow):
             self.actualizar_display()
             data = str(self.tilt)+','+ str(self.pan)
             data = data.encode('utf-8')
-            print("data:",data)
+            print(data)
             if self.serial.isOpen():
                 self.serial.write(data)
         else:
@@ -140,7 +140,11 @@ class HMI(QMainWindow):
             sup_tilt = self.entry_sup_tilt.value()
             inf_pan = self.entry_inf_pan.value()
             sup_pan = self.entry_sup_pan.value()
-            self.enviar_serial("Enviando datos de la rutina:",str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan))
+            data = str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan)
+            data = data.encode('utf-8')
+            print(data)
+            if self.serial.isOpen():
+                self.serial.write(data)  
         else:
             print('Te encuentras en modo manual, cambia a modo automatico para iniciar la rutina')
 
