@@ -37,21 +37,10 @@ void capturarAngulos(){
   int separador;
   String lectura_serial;
   char array_serial[4], pan_array[2], tilt_array[2];
-  Serial.print("Aqui");
   if(Serial.available() > 2){
     lectura_serial = Serial.readString();
     separador = lectura_serial.indexOf(',');
     lectura_serial.substring(0,separador).toCharArray(array_serial,4);
-    if(array_serial[0] == '-'){
-      pan_array[0] = array_serial[1];
-      pan_array[1] = array_serial[2];
-      pan = atoi(pan_array);
-      pan = pan * -1;    
-    }
-    else{
-      pan = atoi(array_serial);
-    }
-    lectura_serial.substring(separador+1,lectura_serial.length()).toCharArray(array_serial,4);
     if(array_serial[0] == '-'){
       tilt_array[0] = array_serial[1];
       tilt_array[1] = array_serial[2];
@@ -61,11 +50,18 @@ void capturarAngulos(){
     else{
       tilt = atoi(array_serial);
     }
+    lectura_serial.substring(separador+1,lectura_serial.length()).toCharArray(array_serial,4);
+    if(array_serial[0] == '-'){
+      pan_array[0] = array_serial[1];
+      pan_array[1] = array_serial[2];
+      pan = atoi(tilt_array);
+      pan = pan * -1;    
+    }
+    else{
+      pan = atoi(array_serial);
+    }
     pan += 95;
     tilt += 95;
-    Serial.print(pan);
-    Serial.print(",");
-    Serial.println(tilt);
   }
 }
 
