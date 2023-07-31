@@ -8,8 +8,7 @@ from pyqtgraph import PlotWidget
 import numpy as np
 import sys
 import gc
-import time
-import threading
+import csv
 
 # HMI class for the GUI
 class HMI(QMainWindow):
@@ -30,8 +29,9 @@ class HMI(QMainWindow):
 
         # Connect the buttons from the Lidar Frame to their respective functions
         self.bt_iniciar_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Iniciar Lidar", 1)) # Connect the iniciar_lidar button to the iniciar_lidar function
-        self.bt_detener_lidar.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Detener Lidar", 2)) # Connect the pausar_lidar button to the pausar_lidar function
+        self.bt_detener_lidar.clicked.connect(self.detener_lidar) # Connect the pausar_lidar button to the pausar_lidar function
         self.bt_guardar_lidar.clicked.connect(self.guardar_lidar) # Connect the guardar_lidar button to the guardar_lidar function
+        self.lectura_lidar = [] # Create a list to store the Lidar data
 
         # Connect the Mode Selection buttons to their respective functions
         self.modo_manual.clicked.connect(lambda: self.seleccionar_modo('manual')) # Connect the modo_manual button to the modo_manual_func function
@@ -39,7 +39,7 @@ class HMI(QMainWindow):
         
         # Connect the buttons from the Modo Manual Frame to their respective functions
         self.bt_enviar_manual.clicked.connect(self.enviar_manual_data) # Connect the enviar_manual button to the enviar_manual_func function
-        self.bt_home_tilt.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Posición Home Cabezal",6)) # Connect the home_tilt button to the home_tilt function
+        self.bt_home_tilt.clicked.connect(self.home) # Connect the home_tilt button to the home_tilt function
         self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",7)) # Connect the ascenso button to the ascenso function
         self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",8)) # Connect the descenso button to the descenso function
 
@@ -47,8 +47,6 @@ class HMI(QMainWindow):
         self.bt_iniciar_rutina.clicked.connect(self.iniciar_rutina) # Connect the iniciar_rutina button to the iniciar_rutina function
 
         # Connect the signals from the Modo Automatico Range Selection to the PlotWidget
-        self.entry_inf_tilt.valueChanged.connect(self.actualizar_grafica) # Connect the entry_inf_tilt signal to the update_plot function
-        self.entry_sup_tilt.valueChanged.connect(self.actualizar_grafica) # Connect the entry_sup_tilt signal to the update_plot function
         self.entry_inf_pan.valueChanged.connect(self.actualizar_grafica) # Connect the entry_inf_pan signal to the update_plot function
         self.entry_sup_pan.valueChanged.connect(self.actualizar_grafica) # Connect the entry_sup_pan signal to the update_plot function
 
@@ -92,7 +90,10 @@ class HMI(QMainWindow):
         try:
             linea = self.serial.readLine()
             linea_decoded = str(linea, 'utf-8').strip()
-            print(linea_decoded)
+            linea_decoded.strip('\n')
+            linea_decoded.replace(',','')
+            lista_datos = [valor for valor in linea_decoded.split(',') if valor.strip()]
+            self.lectura_lidar.append(lista_datos)
         except:
             print('Error al leer el puerto serial')
 
@@ -105,9 +106,18 @@ class HMI(QMainWindow):
         except:
             print('Error al enviar datos por el puerto serial')
 
+    def detener_lidar(self): # Function to stop the Lidar
+        self.enviar_serial("Enviando instrucción: Detener Lidar", 2)
+        self.display_lidar.setText(str(len(self.lectura_lidar)))
+        
+
     def guardar_lidar(self): # Function to save the Lidar data
-        self.enviar_serial("Enviando instrucción: Guardar Lidar", 3)
-        #Codigo
+        ruta_archivo = "datosLidar.csv"
+        # Escribir la lista de datos en el archivo CSV
+        with open(ruta_archivo, "w", newline="") as archivo_csv:
+            writer = csv.writer(archivo_csv)
+            writer.writerows(self.lectura_lidar)
+        self.lectura_lidar = []
     
     def seleccionar_modo(self, seleccion): # Function to select the mode of the system, it will habilitate or disable the respective frames buttons
         if(seleccion == 'manual'):
@@ -119,6 +129,12 @@ class HMI(QMainWindow):
         self.disp_tilt.display(self.tilt)
         self.disp_pan.display(self.pan)
 
+    def home(self): # Function to send the home signal to the serial port
+        self.enviar_serial("Enviando instrucción: Posición Home Cabezal",6)
+        self.tilt = 0
+        self.pan = 0
+        self.actualizar_display()
+        
     def enviar_manual_data(self): # Function to send the manual data to the serial port
         if(self.modo == 'M'):
             self.enviar_serial("Enviando instrucción: Enviar Pos. Manual", 5)
@@ -136,11 +152,10 @@ class HMI(QMainWindow):
     def iniciar_rutina(self): # Function to send the initiate signal for the scanning routine to the serial port
         if(self.modo == 'A'):
             self.enviar_serial("Enviando instrucción: Iniciar Rutina", 4)
-            inf_tilt = self.entry_inf_tilt.value()
-            sup_tilt = self.entry_sup_tilt.value()
+            tilt = self.entry_tilt_auto.value()
             inf_pan = self.entry_inf_pan.value()
             sup_pan = self.entry_sup_pan.value()
-            data = str(inf_tilt)+','+str(sup_tilt)+','+str(inf_pan)+','+str(sup_pan)
+            data = str(tilt)+','+str(inf_pan)+','+str(sup_pan)
             data = data.encode('utf-8')
             print(data)
             if self.serial.isOpen():

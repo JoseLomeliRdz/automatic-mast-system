@@ -1,17 +1,9 @@
-#include <Wire.h> // Libreria para comunicacion I2C
-#include <Adafruit_PWMServoDriver.h> // Libreria para controlar el driver PCA9685
 #include "RPLidar.h" // Libreria para controlar el sensor Lidar
-
+#include <Servo.h> // Libreria para controlar los servos
 
 /* Setup para Servos */
-Adafruit_PWMServoDriver pwmServos = Adafruit_PWMServoDriver(); // Crear objeto pwm para controlar los servos mediante el driver PCA9685
-
-#define MIN_PULSE_WIDTH 650   // Definimos el ancho de pulso minimo para el pwm
-#define MAX_PULSE_WIDTH 2350  // Definimos el ancho de pulso maximo para el pwm
-#define FREQUENCY 50          // Definimos la frecuencia del pwm
-
-uint8_t servo_pan = 11; // Definimos el servo pan
-uint8_t servo_tilt = 8; // Definimos el servo tilt
+Servo servo_pan; // Definimos el servo pan
+Servo servo_tilt; // Definimos el servo tilt
 
 /* Setup para Lidar */
 RPLidar lidar;
@@ -23,15 +15,14 @@ float angleAtMinDist = 0;
 byte comando = 0x00;
 float time=0, time_prev=0, clock=100;
   // Variables para el modo manual
-  int pan = 0, tilt = 0;
+  uint8_t pan = 0, tilt = 0;
   // Variables para el modo automatico
-  int pan_inf = 0, pan_sup = 0, tilt_inf = 0, tilt_sup = 0;
-
+  uint8_t tilt_rutina= 0, pan_inf = 0, pan_sup = 0;
 
 /* Capturar los datos del lidar */
-void saveData(float angle, float distance){
+void saveData(uint16_t angle, uint16_t distance){
   Serial.print(distance);
-  Serial.print(" ");
+  Serial.print(',');
   Serial.println(angle);
 }
 
@@ -39,57 +30,51 @@ void saveData(float angle, float distance){
 void capturarAngulos(){
   delay(10);
   int contador = 0;
-  String lectura_serial[4];
-  char array_serial[8], pan_array[2], tilt_array[2];
+  String lectura_serial[3];
   if(Serial.available() > 2){
-    for(int i = 0; i < 4; i++){
-      lectura_serial[i] = Serial.readStringUntil(',');
-      if(lectura_serial[i] != ""){
-        contador++;
-      }
+    for(int i = 0; i < 3; i++){
+    lectura_serial[i] = Serial.readStringUntil(',');
+    if(lectura_serial[i] != ""){contador++;}
     }
-    if(contador == 4){
-      tilt_inf = 95 + lectura_serial[0].toInt();
-      tilt_sup = 95 + lectura_serial[1].toInt();
-      pan_inf = 95 + lectura_serial[2].toInt();
-      pan_sup = 95 + lectura_serial[3].toInt();
+    if(contador == 3){
+      tilt_rutina = 105 + lectura_serial[0].toInt();
+      pan_inf = 92 + lectura_serial[1].toInt();
+      pan_sup = 92 + lectura_serial[2].toInt();
     }
     else if(contador == 2){
-      tilt = 95 + lectura_serial[0].toInt();
-      pan = 95 + lectura_serial[1].toInt();
+      tilt = 105 + lectura_serial[0].toInt();
+      pan = 92 + lectura_serial[1].toInt();
     }
   }
 }
 
-/*Mover un servo a un angulo especifico*/
-void moverServo(uint8_t servo, uint8_t angulo) {
-
-  int ancho_pulso_crudo, ancho_pulso_convertido;
-  
-  // Obtener el ancho de pulso
-  ancho_pulso_crudo = map(angulo, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
-  ancho_pulso_convertido = int(float(ancho_pulso_crudo) / 1000000 * FREQUENCY * 4096);
-
-  //Mandamos la señal al servo especificado
-  pwmServos.setPWM(servo, 0, ancho_pulso_convertido);
-}
-
 /*Ejecutar el movimiento de los servos a una posicion especifica (Modo manual)*/
 void posicionManual(){
-  moverServo(servo_pan,pan);
-  moverServo(servo_tilt,tilt);
+  servo_pan.write(pan);
+  servo_tilt.write(tilt);
 }
 
 /*Ejecutar el movimiento de los servos a una rutina especificada (Modo automatico)*/
 void iniciarRutina(){
-  if()
-  
+  servo_tilt.write(tilt_rutina);
+  servo_pan.write(pan_inf);
+  while(comando == 0x04){ // Modificar condicion de salida
+      lidarScan();
+      if(servo_pan.read() < pan_sup){
+        servo_pan.write(servo_pan.read() + 1);
+      }
+      else{
+          comando = 0x00;
+          lidarStop();
+          homeTilt();
+      }
+  }
 }
 
 /*Ejecutar el movimiento de los servos a la posicion home (Tilt - 95°, Pan - 90°)*/
 void homeTilt(){
-  moverServo(servo_pan,90);
-  moverServo(servo_tilt,95);
+  servo_pan.write(92);
+  servo_tilt.write(105);
 }
 
 /*Control PID para el ascenso y descenso del mastil (POR IMPLEMENTAR)*/
@@ -106,10 +91,10 @@ void baseMastil(int task){
 }
 
 /*Escaneo de una muestra del sensor Lidar*/
-void lidarScan(){// Modificar inicio Motor
+void lidarScan(){
     if (IS_OK(lidar.waitPoint())) {
-      float distance = lidar.getCurrentPoint().distance;
-      float angle = lidar.getCurrentPoint().angle;  // 0-360 deg
+      uint16_t distance = lidar.getCurrentPoint().distance;
+      uint16_t angle = lidar.getCurrentPoint().angle;  // 0-360 deg
       if (lidar.getCurrentPoint().startBit) {
         // a new scan, display the previous data...
         saveData(angleAtMinDist, minDistance);
@@ -139,11 +124,6 @@ void lidarScan(){// Modificar inicio Motor
 void lidarStop(){ // Modificar inicio Motor
   analogWrite(RPLIDAR_MOTOR, 0);
   lidar.stop();
-}
-
-/*Envio de los datos escaneados por el Lidar al Serial*/
-void lidarSave(){ // Modificar guardado de datos
-  // Codigo para enviar los datos del lidar
 }
 
 /*Interpretador de comandos enviados por la HMI*/
@@ -179,9 +159,8 @@ void interpretador(byte comando){
 }
 
 void setup(){
-  pwmServos.begin(); // Iniciar el driver PCA9685
-  pwmServos.setPWMFreq(FREQUENCY); // Establecer la frecuencia del servo
-  pwmServos.setOscillatorFrequency(27000000); // Establecer la frecuencia del oscilador del driver PCA9685 para los Servos
+  servo_pan.attach(11);
+  servo_tilt.attach(8);
   homeTilt();
   Serial.begin(460800);
   Serial2.begin(115200);
@@ -189,10 +168,10 @@ void setup(){
 }
 
 void loop(){
-  time = milis();
   interpretador(comando);
 }
 
+///OPTIMIZAR ///
 void serialEvent(){
   while(Serial.available()){
     Serial.readBytes(&comando,1);
