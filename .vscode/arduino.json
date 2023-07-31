@@ -1,7 +1,4 @@
 {
-    "configuration": "cpu=atmega2560",
     "board": "arduino:avr:mega",
-    "port": "COM6",
-    "programmer": "avrispmkii",
-    "sketch": "scripts\\mast_main\\mast_main.ino"
+    "port": "COM6"
 }

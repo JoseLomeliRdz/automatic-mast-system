@@ -118,6 +118,7 @@ class HMI(QMainWindow):
             writer = csv.writer(archivo_csv)
             writer.writerows(self.lectura_lidar)
         self.lectura_lidar = []
+        self.display_lidar.setText(str(len(self.lectura_lidar)))
     
     def seleccionar_modo(self, seleccion): # Function to select the mode of the system, it will habilitate or disable the respective frames buttons
         if(seleccion == 'manual'):

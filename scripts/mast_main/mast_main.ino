@@ -55,7 +55,7 @@ void posicionManual(){
 }
 
 /*Ejecutar el movimiento de los servos a una rutina especificada (Modo automatico)*/
-void iniciarRutina(){
+void iniciarRutina(){ // Falta Terminar
   servo_tilt.write(tilt_rutina);
   servo_pan.write(pan_inf);
   while(comando == 0x04){ // Modificar condicion de salida
@@ -78,7 +78,7 @@ void homeTilt(){
 }
 
 /*Control PID para el ascenso y descenso del mastil (POR IMPLEMENTAR)*/
-void baseMastil(int task){
+void baseMastil(int task){ //Por Terminar
   if(task == 'a'){
     // Ascenso
   }
@@ -171,8 +171,8 @@ void loop(){
   interpretador(comando);
 }
 
-///OPTIMIZAR ///
-void serialEvent(){
+/*Interrupcion cada vez que se recibe datos del serial*/
+void serialEvent(){ 
   while(Serial.available()){
     Serial.readBytes(&comando,1);
     if(Serial.available() >= 2){
