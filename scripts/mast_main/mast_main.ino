@@ -36,7 +36,7 @@ void capturarAngulos(){
     if(lectura_serial[i] != ""){contador++;} // Separamos cada byte recibido en una posicion de la lista
     }
     if(contador == 3){ // Si se recibieron los 3 bytes de la rutina automatica se asignan a las respectivas variables
-      tilt_rutina = 105 + lectura_serial[0].toInt();
+      tilt_rutina = 105 + lectura_serial[0].toInt(); // 105 es el angulo "cero" del tilt y 92 es el angulo "cero" del pan
       pan_inf = 92 + lectura_serial[1].toInt();
       pan_sup = 92 + lectura_serial[2].toInt();
     }

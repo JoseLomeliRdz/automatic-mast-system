@@ -78,7 +78,6 @@ class HMI(QMainWindow):
             print('Conectado al puerto: ', self.port)
         except:
             print('Error al abrir el puerto serial')
-    
     def desconectar_puerto(self): # Function to disconnect from the serial port
         try:
             self.serial.close() # Close the port
