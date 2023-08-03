@@ -40,8 +40,8 @@ class HMI(QMainWindow):
         # Connect the buttons from the Modo Manual Frame to their respective functions
         self.bt_enviar_manual.clicked.connect(self.enviar_manual_data) # Connect the enviar_manual button to the enviar_manual_func function
         self.bt_home_tilt.clicked.connect(self.home) # Connect the home_tilt button to the home_tilt function
-        self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",7)) # Connect the ascenso button to the ascenso function
-        self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",8)) # Connect the descenso button to the descenso function
+        self.bt_ascenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Ascenso:",6)) # Connect the ascenso button to the ascenso function
+        self.bt_descenso.clicked.connect(lambda: self.enviar_serial("Enviando instrucción: Descenso:",7)) # Connect the descenso button to the descenso function
 
         # Connect the buttons from the Modo Automatico Frame to their respective functions
         self.bt_iniciar_rutina.clicked.connect(self.iniciar_rutina) # Connect the iniciar_rutina button to the iniciar_rutina function
@@ -88,21 +88,21 @@ class HMI(QMainWindow):
 
     def leer_serial(self): # Function to read the serial port
         try:
-            linea = self.serial.readLine()
-            linea_decoded = str(linea, 'utf-8').strip()
-            linea_decoded.strip('\n')
-            linea_decoded.replace(',','')
-            lista_datos = [valor for valor in linea_decoded.split(',') if valor.strip()]
-            self.lectura_lidar.append(lista_datos)
+            linea = self.serial.readLine() # Read the serial port buffer
+            linea_decoded = str(linea, 'utf-8').strip() # Decode the data
+            linea_decoded.strip('\n') # Remove the \n character
+            linea_decoded.replace(',','') # Remove the , character
+            lista_datos = [valor for valor in linea_decoded.split(',') if valor.strip()] # Split the data into a list
+            self.lectura_lidar.append(lista_datos) # Append the data to the Lidar data list
         except:
             print('Error al leer el puerto serial')
 
     def enviar_serial(self, mensaje, data): # Function to send data to the serial port
         try:
-            data = bytes([data])
-            print(mensaje,data)
+            data = bytes([data]) # Convert the data to bytes
+            print(mensaje,data) 
             if self.serial.isOpen():
-                self.serial.write(data)
+                self.serial.write(data) # Write the data to the serial port
         except:
             print('Error al enviar datos por el puerto serial')
 
@@ -114,11 +114,11 @@ class HMI(QMainWindow):
     def guardar_lidar(self): # Function to save the Lidar data
         ruta_archivo = "datosLidar.csv"
         # Escribir la lista de datos en el archivo CSV
-        with open(ruta_archivo, "w", newline="") as archivo_csv:
-            writer = csv.writer(archivo_csv)
-            writer.writerows(self.lectura_lidar)
-        self.lectura_lidar = []
-        self.display_lidar.setText(str(len(self.lectura_lidar)))
+        with open(ruta_archivo, "w", newline="") as archivo_csv: # Open the CSV file
+            writer = csv.writer(archivo_csv) # Create the CSV writer
+            writer.writerows(self.lectura_lidar) # Write the Lidar data to the CSV file
+        self.lectura_lidar = [] # Clear the Lidar data list
+        self.display_lidar.setText(str(len(self.lectura_lidar))) # Update the Lidar data display
     
     def seleccionar_modo(self, seleccion): # Function to select the mode of the system, it will habilitate or disable the respective frames buttons
         if(seleccion == 'manual'):
@@ -131,36 +131,36 @@ class HMI(QMainWindow):
         self.disp_pan.display(self.pan)
 
     def home(self): # Function to send the home signal to the serial port
-        self.enviar_serial("Enviando instrucción: Posición Home Cabezal",6)
+        self.enviar_serial("Enviando instrucción: Posición Home Cabezal",5)
         self.tilt = 0
         self.pan = 0
         self.actualizar_display()
         
     def enviar_manual_data(self): # Function to send the manual data to the serial port
         if(self.modo == 'M'):
-            self.enviar_serial("Enviando instrucción: Enviar Pos. Manual", 5)
+            self.enviar_serial("Enviando instrucción: Enviar Pos. Manual", 4)
             self.tilt = self.entry_tilt_manual.value()
             self.pan = self.entry_pan_manual.value()
             self.actualizar_display()
-            data = str(self.tilt)+','+ str(self.pan)
-            data = data.encode('utf-8')
+            data = str(self.tilt)+','+ str(self.pan) # Create the data string
+            data = data.encode('utf-8') # Encode the data
             print(data)
             if self.serial.isOpen():
-                self.serial.write(data)
+                self.serial.write(data) # Write the data to the serial port
         else:
             print('Te encuentras en modo automatico, cambia a modo manual para enviar datos')
 
     def iniciar_rutina(self): # Function to send the initiate signal for the scanning routine to the serial port
         if(self.modo == 'A'):
-            self.enviar_serial("Enviando instrucción: Iniciar Rutina", 4)
+            self.enviar_serial("Enviando instrucción: Iniciar Rutina", 3)
             tilt = self.entry_tilt_auto.value()
             inf_pan = self.entry_inf_pan.value()
             sup_pan = self.entry_sup_pan.value()
-            data = str(tilt)+','+str(inf_pan)+','+str(sup_pan)
-            data = data.encode('utf-8')
+            data = str(tilt)+','+str(inf_pan)+','+str(sup_pan) # Create the data string
+            data = data.encode('utf-8') # Encode the data
             print(data)
             if self.serial.isOpen():
-                self.serial.write(data)  
+                self.serial.write(data)  # Write the data to the serial port
         else:
             print('Te encuentras en modo manual, cambia a modo automatico para iniciar la rutina')
 
