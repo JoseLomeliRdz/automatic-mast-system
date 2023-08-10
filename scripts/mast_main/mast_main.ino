@@ -44,6 +44,9 @@ void capturarAngulos(){
       tilt = 105 + lectura_serial[0].toInt();
       pan = 92 + lectura_serial[1].toInt();
     }
+    Serial.print(tilt);
+    Serial.print(',');
+    Serial.print(pan);
   }
 }
 
@@ -58,13 +61,11 @@ void iniciarRutina(){ // Incompleta!!
   servo_tilt.write(tilt_rutina);
   servo_pan.write(pan_inf);
   while(comando == 0x04){
-      lidarScan();
       if(servo_pan.read() < pan_sup){
         servo_pan.write(servo_pan.read() + 1);
       }
       else{
           comando = 0x00;
-          lidarStop();
           homeTilt();
       }
   }
