@@ -473,7 +473,7 @@ QPushButton::hover{
                            </property>
                            <property name="icon">
                             <iconset>
-                             <normaloff>../../../Iconos/Refresh.svg</normaloff>../../../Iconos/Refresh.svg</iconset>
+                             <normaloff>../Iconos/Refresh.svg</normaloff>../Iconos/Refresh.svg</iconset>
                            </property>
                            <property name="iconSize">
                             <size>
@@ -1354,7 +1354,7 @@ QPushButton::hover{
                            </property>
                            <property name="icon">
                             <iconset>
-                             <normaloff>../../../Iconos/Frente2.png</normaloff>../../../Iconos/Frente2.png</iconset>
+                             <normaloff>../Iconos/FrenteHome.png</normaloff>../Iconos/FrenteHome.png</iconset>
                            </property>
                            <property name="iconSize">
                             <size>
@@ -1393,7 +1393,7 @@ QPushButton::hover{
                            </property>
                            <property name="icon">
                             <iconset>
-                             <normaloff>../../../Iconos/WorkFlecha.png</normaloff>../../../Iconos/WorkFlecha.png</iconset>
+                             <normaloff>../Iconos/WorkFlecha.png</normaloff>../Iconos/WorkFlecha.png</iconset>
                            </property>
                            <property name="iconSize">
                             <size>
@@ -1434,7 +1434,7 @@ QPushButton::hover{
                          </property>
                          <property name="icon">
                           <iconset>
-                           <normaloff>../../../Iconos/RestFlecha.png</normaloff>../../../Iconos/RestFlecha.png</iconset>
+                           <normaloff>../Iconos/RestFlecha.png</normaloff>../Iconos/RestFlecha.png</iconset>
                          </property>
                          <property name="iconSize">
                           <size>
@@ -1470,11 +1470,11 @@ QPushButton::hover{
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
+   <header location="global">pyqtgraph</header>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../../Iconos/pygraphbackground.qrc"/>
+  <include location="../Iconos/pygraphbackground.qrc"/>
  </resources>
  <connections>
   <connection>

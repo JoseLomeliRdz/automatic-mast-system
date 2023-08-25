@@ -13,7 +13,6 @@ float angleAtMinDist = 0;
 
 /* Variables Globales */
 byte comando = 0x00;
-float time=0, time_prev=0, clock=100;
   // Variables para el modo manual
   uint8_t pan = 0, tilt = 0;
   // Variables para el modo automatico
@@ -31,20 +30,23 @@ void capturarAngulos(){
   delay(10);
   int contador = 0;
   String lectura_serial[3];
-  if(Serial.available() > 2){
+  if(Serial.available() > 2){ // Si hay mas de 2 bytes en el buffer del serial los recibimos
     for(int i = 0; i < 3; i++){
     lectura_serial[i] = Serial.readStringUntil(',');
-    if(lectura_serial[i] != ""){contador++;}
+    if(lectura_serial[i] != ""){contador++;} // Separamos cada byte recibido en una posicion de la lista
     }
-    if(contador == 3){
-      tilt_rutina = 105 + lectura_serial[0].toInt();
+    if(contador == 3){ // Si se recibieron los 3 bytes de la rutina automatica se asignan a las respectivas variables
+      tilt_rutina = 105 + lectura_serial[0].toInt(); // 105 es el angulo "cero" del tilt y 92 es el angulo "cero" del pan
       pan_inf = 92 + lectura_serial[1].toInt();
       pan_sup = 92 + lectura_serial[2].toInt();
     }
-    else if(contador == 2){
+    else if(contador == 2){ // Si se recibieron los 2 bytes del posicionamiento manual se asignan a las respectivas variables
       tilt = 105 + lectura_serial[0].toInt();
       pan = 92 + lectura_serial[1].toInt();
     }
+    Serial.print(tilt);
+    Serial.print(',');
+    Serial.print(pan);
   }
 }
 
@@ -55,17 +57,15 @@ void posicionManual(){
 }
 
 /*Ejecutar el movimiento de los servos a una rutina especificada (Modo automatico)*/
-void iniciarRutina(){ // Falta Terminar
+void iniciarRutina(){ // Incompleta!!
   servo_tilt.write(tilt_rutina);
   servo_pan.write(pan_inf);
-  while(comando == 0x04){ // Modificar condicion de salida
-      lidarScan();
+  while(comando == 0x04){
       if(servo_pan.read() < pan_sup){
         servo_pan.write(servo_pan.read() + 1);
       }
       else{
           comando = 0x00;
-          lidarStop();
           homeTilt();
       }
   }
@@ -78,7 +78,7 @@ void homeTilt(){
 }
 
 /*Control PID para el ascenso y descenso del mastil (POR IMPLEMENTAR)*/
-void baseMastil(int task){ //Por Terminar
+void baseMastil(int task){ //Por desarrollar
   if(task == 'a'){
     // Ascenso
   }
@@ -92,9 +92,9 @@ void baseMastil(int task){ //Por Terminar
 
 /*Escaneo de una muestra del sensor Lidar*/
 void lidarScan(){
-    if (IS_OK(lidar.waitPoint())) {
-      uint16_t distance = lidar.getCurrentPoint().distance;
-      uint16_t angle = lidar.getCurrentPoint().angle;  // 0-360 deg
+    if (IS_OK(lidar.waitPoint())) { //Si el sensor Lidar esta listo para leer un punto
+      uint16_t distance = lidar.getCurrentPoint().distance; //Obtenemos el punto actual
+      uint16_t angle = lidar.getCurrentPoint().angle;  //Obtenemos el angulo en el cual se tomo el punto
       if (lidar.getCurrentPoint().startBit) {
         // a new scan, display the previous data...
         saveData(angleAtMinDist, minDistance);
@@ -121,7 +121,7 @@ void lidarScan(){
 }
 
 /*Detener el escaneo del sensor Lidar*/
-void lidarStop(){ // Modificar inicio Motor
+void lidarStop(){
   analogWrite(RPLIDAR_MOTOR, 0);
   lidar.stop();
 }
@@ -135,22 +135,19 @@ void interpretador(byte comando){
     case 0x02: // Detener Escaneo
       lidarStop();
       break;
-    case 0x03: // Guardar Datos
-      //lidarSave();
-      break;
-    case 0x04: // Modo Automatico: Iniciar Rutina
+    case 0x03: // Modo Automatico: Iniciar Rutina
       iniciarRutina();
       break;
-    case 0x05: // Modo Manual: Enviar
+    case 0x04: // Modo Manual: Enviar
       posicionManual();
       break;
-    case 0x06: // Modo Manual: Home
+    case 0x05: // Modo Manual: Home
       homeTilt();
       break;
-    case 0x07: // Modo Manual: Ascenso
+    case 0x06: // Modo Manual: Ascenso
       //baseMastil('a');
       break;
-    case 0x08: // Modo Manual: Descenso
+    case 0x07: // Modo Manual: Descenso
       //baseMastil('d');
       break;
     default:

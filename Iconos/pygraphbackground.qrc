@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="graphbackground">
+    <file>top4.png</file>
+  </qresource>
+</RCC>
